@@ -486,9 +486,13 @@ def _get_login_cache_key(*, account_id: str, token: str):
 
 class TenantService:
     @staticmethod
-    def create_tenant(name: str, is_setup: Optional[bool] = False) -> Tenant:
+    def create_tenant(name: str, is_setup: Optional[bool] = False, is_from_dashboard: Optional[bool] = False) -> Tenant:
         """Create tenant"""
-        if not FeatureService.get_system_features().is_allow_create_workspace and not is_setup:
+        if (
+            not FeatureService.get_system_features().is_allow_create_workspace
+            and not is_setup
+            and not is_from_dashboard
+        ):
             from controllers.console.error import NotAllowedCreateWorkspace
 
             raise NotAllowedCreateWorkspace()
@@ -817,7 +821,7 @@ class RegisterService:
             db.session.rollback()
         except Exception as e:
             db.session.rollback()
-            logging.error(f"Register failed: {e}")
+            logging.exception(f"Register failed: {e}")
             raise AccountRegisterError(f"Registration failed: {e}") from e
 
         return account
